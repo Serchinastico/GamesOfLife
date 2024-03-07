@@ -9,3 +9,14 @@ This is entirely based on [Wolfram's Elementary Cellular Automatons](https://mat
 ## Life Automata
 
 Variations of [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway's_Game_of_Life).
+
+### Rorschach
+
+I made a happy accident and swapped x and y while calculating neighbors for a given cell. The result is a mirrored animation that resembles Rorschach tests.
+
+## Ideas
+
+- Use blender for better renders
+- Mix colors in game of life
+- Use more neighbors in game of life - different _neighboring_ definition
+- 
