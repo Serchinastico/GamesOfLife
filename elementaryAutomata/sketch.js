@@ -1,7 +1,7 @@
 const WIDTH = 1024;
 const HEIGHT = 1600;
 
-let rules = [0, 1, 1, 0, 1, 1, 1, 0].reverse();
+let rules = [0, 0, 1, 1, 1, 1, 1, 0].reverse();
 let cellRows;
 let iteration;
 
@@ -12,14 +12,6 @@ function setup() {
   background("black");
   stroke("white");
   strokeWeight(1.1);
-
-  for (let i = 1; i < 1500; i++) {
-    const prevRow = cellRows[i - 1];
-    const row = calculateNextRow(prevRow, rules);
-    cellRows.push(row);
-  }
-
-  iteration = cellRows.length;
 }
 
 function draw() {

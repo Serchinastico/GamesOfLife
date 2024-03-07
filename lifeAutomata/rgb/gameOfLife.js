@@ -10,7 +10,7 @@ function createWorld(width, height) {
   }
 
   // Fill in some random data
-  for (let i = 0; i < 5000; i++) {
+  for (let i = 0; i < 100000; i++) {
     const x = Math.floor(Math.random() * width);
     const y = Math.floor(Math.random() * height);
 
@@ -36,23 +36,17 @@ function step(world, width, height) {
         height
       );
 
-      if (cell > 0 && neighborsLifeForce < 2.5) {
-        newWorld[y].push(cell - 0.01);
+      if (cell > 0 && neighborsLifeForce < 2) {
+        newWorld[y].push(0);
       } else if (
         cell > 0 &&
         neighborsLifeForce >= 2 &&
         neighborsLifeForce <= 3
       ) {
-        newWorld[y].push(cell + 0.01);
-      } else if (cell > 0 && neighborsLifeForce > 3 && neighborsLifeForce < 4) {
-        newWorld[y].push(cell - 0.1);
+        newWorld[y].push(1);
       } else if (cell > 0 && neighborsLifeForce >= 4) {
         newWorld[y].push(0);
-      } else if (
-        cell === 0 &&
-        neighborsLifeForce > 2 &&
-        neighborsLifeForce < 3
-      ) {
+      } else if (cell === 0 && neighborsLifeForce === 3) {
         newWorld[y].push(1);
       } else {
         newWorld[y].push(0);
@@ -71,14 +65,14 @@ function getNeighborsLifeForce(world, x, y, width, height) {
 
   // Delta corrections for in-the-limits coordinates
   if (x === 0) {
-    westDx = WIDTH - 1;
-  } else if (x === WIDTH - 1) {
+    westDx = width - 1;
+  } else if (x === width - 1) {
     eastDx = 0;
   }
 
   if (y === 0) {
-    northDy = HEIGHT - 1;
-  } else if (y === HEIGHT - 1) {
+    northDy = height - 1;
+  } else if (y === height - 1) {
     southDy = 0;
   }
 
