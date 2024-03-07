@@ -67,13 +67,13 @@ function getNeighborsLifeForce(world, x, y, width, height) {
   if (x === 0) {
     westDx = width - 1;
   } else if (x === width - 1) {
-    eastDx = 0;
+    eastDx = -(width - 1);
   }
 
   if (y === 0) {
     northDy = height - 1;
   } else if (y === height - 1) {
-    southDy = 0;
+    southDy = -(height - 1);
   }
 
   const swCell = world[y + southDy][x + westDx];
