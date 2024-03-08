@@ -22,5 +22,6 @@ I'm trying to emulate 3 rival civilizations that will fight for territory
 
 - Use blender for better renders
 - Mix colors in game of life
-- Use more neighbors in game of life - different _neighboring_ definition
-- 
+- Use more neighbors in game of life - different _neighboring_ definition (circular, 3D, symmetries)
+- WebAssembly to make automata more efficient
+- Use HashLife to make automata more efficient
