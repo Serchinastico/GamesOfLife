@@ -29,9 +29,3 @@ function draw() {
     }
   });
 }
-
-function mouseClicked() {
-  cellRows = [[1]];
-  iteration = 1;
-  background("black");
-}

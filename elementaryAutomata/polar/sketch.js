@@ -1,42 +1,45 @@
 const WIDTH = 1024;
 const HEIGHT = 1024;
 const RULE = 73;
-const rules = RULE.toString(2)
-  .padStart(8, 0)
-  .split("")
-  .map((i) => parseInt(i))
-  .reverse();
+
+let rule = numberToRule(RULE);
 let cellRows;
 let iteration;
 
 function setup() {
-  createCanvas(WIDTH, HEIGHT);
+  createCanvas(windowWidth, windowHeight);
   cellRows = [[1]];
   iteration = 1; // same as cellRows.length
 
   noFill();
-  background("black");
-  stroke("white");
-  strokeWeight(1.1);
+  background("#240A34");
+  stroke("#EABE6C");
+  strokeWeight(1);
 }
 
 function draw() {
   const prevRow = cellRows[iteration - 1];
-  const row = calculateNextRow(prevRow, rules);
+  const row = calculateNextRow(prevRow, rule);
 
   cellRows.push(row);
   iteration += 1;
 
   const numberOfCells = row.length;
   row.forEach((cell, cellIndex) => {
-    const rotation = iteration * -0.001;
+    const rotation = iteration * 0.001;
     const start = rotation + cellIndex / numberOfCells;
     const end = rotation + (cellIndex + 1) / numberOfCells;
 
+    if (cellIndex < numberOfCells / 4.5 || cellIndex > numberOfCells * 0.785) {
+      stroke("#891652");
+    } else {
+      stroke("#EABE6C");
+    }
+
     if (cell === 1) {
       arc(
-        WIDTH / 2,
-        HEIGHT / 2,
+        windowWidth / 2,
+        windowHeight / 2,
         iteration,
         iteration,
         start * TWO_PI,
@@ -45,3 +48,22 @@ function draw() {
     }
   });
 }
+
+function numberToRule(number) {
+  return number
+    .toString(2)
+    .padStart(8, 0)
+    .split("")
+    .map((i) => parseInt(i))
+    .reverse();
+}
+
+function addListeners() {
+  document.getElementById("update-simulation").onclick = () => {
+    rule = numberToRule(parseInt(document.getElementById("rule").value));
+    cellRows = [[1]];
+    iteration = 1;
+    background("#240A34");
+  };
+}
+document.addEventListener("DOMContentLoaded", addListeners);
