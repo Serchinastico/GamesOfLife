@@ -24,9 +24,10 @@ function createWorldTexture(width: number, height: number) {
 
   for (let i = 0; i < size; i++) {
     const stride = i * 4;
-    data[stride] = Math.random() < 0.5 ? 255 : 0;
-    data[stride + 1] = 0;
-    data[stride + 2] = 0;
+    const rgb = Math.random() < 0.5 ? 255 : 0;
+    data[stride] = rgb;
+    data[stride + 1] = rgb;
+    data[stride + 2] = rgb;
     data[stride + 3] = 255;
   }
   const texture = new THREE.DataTexture(data, width, height, THREE.RGBAFormat);
@@ -53,6 +54,9 @@ function createRenderTarget(width: number, height: number) {
 }
 
 function main() {
+  const width = window.innerWidth,
+    height = window.innerHeight;
+
   const renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
@@ -62,11 +66,8 @@ function main() {
    * with a texture that is the representation of the computed game of life
    */
   const renderScene = new THREE.Scene();
-  const renderCamera = createCamera(window.innerWidth, window.innerHeight);
-  const renderGeometry = createPlaneGeometry(
-    window.innerWidth,
-    window.innerHeight
-  );
+  const renderCamera = createCamera(width, height);
+  const renderGeometry = createPlaneGeometry(width, height);
 
   /**
    * The simulation consists of a different scene where we include our
@@ -74,18 +75,12 @@ function main() {
    * the result of a step in the game of life and printing it in a texture
    */
   const simulationScene = new THREE.Scene();
-  const simulationCamera = createCamera(window.innerWidth, window.innerHeight);
-  let simulationA = createRenderTarget(window.innerWidth, window.innerHeight);
-  let simulationB = createRenderTarget(window.innerWidth, window.innerHeight);
+  const simulationCamera = createCamera(width, height);
+  let simulationA = createRenderTarget(width, height);
+  let simulationB = createRenderTarget(width, height);
 
-  const worldTexture = createWorldTexture(
-    window.innerWidth,
-    window.innerHeight
-  );
-  const worldTextureScale = new THREE.Vector2(
-    window.innerWidth,
-    window.innerHeight
-  );
+  const worldTexture = createWorldTexture(width, height);
+  const worldTextureScale = new THREE.Vector2(width, height);
 
   const simulationMaterial = new THREE.ShaderMaterial({
     vertexShader,
@@ -98,10 +93,7 @@ function main() {
     },
   });
 
-  const simulationGeometry = createPlaneGeometry(
-    window.innerWidth,
-    window.innerHeight
-  );
+  const simulationGeometry = createPlaneGeometry(width, height);
 
   const simulationPlane = new THREE.Mesh(
     simulationGeometry,
@@ -109,6 +101,7 @@ function main() {
   );
   simulationScene.add(simulationPlane);
 
+  // Insert the simulation in the rendered scene as textures
   const renderMaterial = new THREE.MeshBasicMaterial({
     map: simulationA.texture,
   });
@@ -127,8 +120,10 @@ function main() {
     // Ping pong frame buffers
     [simulationA, simulationB] = [simulationB, simulationA];
     simulationMaterial.uniforms.uState.value = simulationB.texture;
+
     requestAnimationFrame(animate);
   }
+
   animate();
 }
 
