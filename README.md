@@ -18,6 +18,20 @@ I made a happy accident and swapped x and y while calculating neighbors for a gi
 
 I'm trying to emulate 3 rival civilizations that will fight for territory
 
+### WebGL
+
+I decided to make the calculations more efficient and decided to use WebGL for that. With this approach (and after re-learning the basics of GLSL and OpenGL primitives) I created a world of simulations, each testing a different Game of Life configuration (by varying the values to decide if a cell borns or survives).
+
+Some interesting configurations I liked:
+
+- b5/s215 - Two groups, horizontals and verticals, fighting for territory
+- b26/s93 - Similar to the above but it has more active battles
+- b209/s51 - Borders are kind of a black mass that surround the cells
+- b209/s240 - Interesting black borders but thicker
+- b113/s85 - It dies slowly but forms patterns in the process that are quite a thing
+- b254/s109 - It's static but the patterns it creates inside are very square-ish and beautiful
+- b224/s181 - Again an static pattern but this time it looks in equilibrium between the dark and clear patterns
+
 ## Ideas
 
 - Use blender for better renders

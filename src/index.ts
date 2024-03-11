@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import vertexShader from "./shaders/vertex.glsl";
-import fragmentShader from "./shaders/fragment.glsl";
+import gameOfLifeShader from "./shaders/classicGameOfLife.fs";
 
 const BORN = 0b00001000;
 const SURVIVE = 0b00001100;
@@ -34,9 +34,12 @@ function createSimulation({
   const steps = [Math.random(), Math.random(), Math.random(), Math.random()];
   steps.sort();
 
+  const born = Math.round(Math.random() * 256);
+  const survive = Math.round(Math.random() * 256);
+
   const material = new THREE.ShaderMaterial({
     vertexShader,
-    fragmentShader,
+    fragmentShader: gameOfLifeShader,
     uniforms: {
       uState: { value: worldTexture },
       uScale: { value: worldTextureScale },
@@ -46,6 +49,8 @@ function createSimulation({
       uSeed: { value: Math.random() },
       uBorn: { value: BORN },
       uSurvive: { value: SURVIVE },
+      uBornRnd: { value: born },
+      uSurviveRnd: { value: survive },
     },
   });
 
@@ -82,7 +87,7 @@ function createWorldTexture(width: number, height: number) {
 
   for (let i = 0; i < size; i++) {
     const stride = i * 4;
-    const rgb = Math.random() * 255;
+    const rgb = Math.random() < 0.5 ? 255 : 0;
 
     data[stride] = rgb;
     data[stride + 1] = rgb;
@@ -136,8 +141,8 @@ function main() {
   const simulationHeight = 200;
   const worldTexture = createWorldTexture(simulationWidth, simulationHeight);
   const simulations: Simulation[] = [];
-  const columns = Math.ceil(window.innerWidth / simulationWidth);
-  const rows = Math.ceil(window.innerHeight / simulationHeight);
+  const columns = Math.floor(window.innerWidth / simulationWidth) + 2;
+  const rows = Math.floor(window.innerHeight / simulationHeight) + 2;
   const numSimulations = rows * columns;
 
   for (let i = 0; i < numSimulations; i++) {
@@ -168,6 +173,14 @@ function main() {
       Math.floor(index / columns) * simulationHeight - window.innerHeight / 2
     );
     renderScene.add(renderPlane);
+
+    console.log(
+      `Simulation ${index} (x: ${index % columns}, y: ${Math.floor(
+        index / columns
+      )}) - Born: ${simulation.material.uniforms.uBornRnd.value} - Survive: ${
+        simulation.material.uniforms.uSurviveRnd.value
+      }`
+    );
   });
 
   function animate() {
