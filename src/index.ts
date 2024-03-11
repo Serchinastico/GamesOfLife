@@ -5,6 +5,64 @@ import fragmentShader from "./shaders/fragment.glsl";
 const BORN = 0b00001000;
 const SURVIVE = 0b00001100;
 
+interface Simulation {
+  renderTargetA: THREE.WebGLRenderTarget<THREE.Texture>;
+  renderTargetB: THREE.WebGLRenderTarget<THREE.Texture>;
+  material: THREE.ShaderMaterial;
+  scene: THREE.Scene;
+  camera: THREE.Camera;
+}
+
+interface SimulationProps {
+  width: number;
+  height: number;
+  worldTexture: THREE.DataTexture;
+}
+
+function createSimulation({
+  width,
+  height,
+  worldTexture,
+}: SimulationProps): Simulation {
+  const scene = new THREE.Scene();
+  const camera = createCamera(width, height);
+  const renderTargetA = createRenderTarget(width, height);
+  const renderTargetB = createRenderTarget(width, height);
+
+  const worldTextureScale = new THREE.Vector2(width, height);
+
+  const steps = [Math.random(), Math.random(), Math.random(), Math.random()];
+  steps.sort();
+
+  const material = new THREE.ShaderMaterial({
+    vertexShader,
+    fragmentShader,
+    uniforms: {
+      uState: { value: worldTexture },
+      uScale: { value: worldTextureScale },
+      uSteps: {
+        value: new THREE.Vector4(steps[0], steps[1], steps[2], steps[3]),
+      },
+      uSeed: { value: Math.random() },
+      uBorn: { value: BORN },
+      uSurvive: { value: SURVIVE },
+    },
+  });
+
+  const geometry = createPlaneGeometry(width, height);
+
+  const plane = new THREE.Mesh(geometry, material);
+  scene.add(plane);
+
+  return {
+    renderTargetA,
+    renderTargetB,
+    material,
+    scene,
+    camera,
+  };
+}
+
 function createCamera(width: number, height: number) {
   const camera = new THREE.OrthographicCamera(
     -width / 2,
@@ -24,7 +82,8 @@ function createWorldTexture(width: number, height: number) {
 
   for (let i = 0; i < size; i++) {
     const stride = i * 4;
-    const rgb = Math.random() < 0.5 ? 255 : 0;
+    const rgb = Math.random() * 255;
+
     data[stride] = rgb;
     data[stride + 1] = rgb;
     data[stride + 2] = rgb;
@@ -67,61 +126,72 @@ function main() {
    */
   const renderScene = new THREE.Scene();
   const renderCamera = createCamera(width, height);
-  const renderGeometry = createPlaneGeometry(width, height);
 
   /**
    * The simulation consists of a different scene where we include our
    * simulation fragments that will take care of "rendering" (or computing)
    * the result of a step in the game of life and printing it in a texture
    */
-  const simulationScene = new THREE.Scene();
-  const simulationCamera = createCamera(width, height);
-  let simulationA = createRenderTarget(width, height);
-  let simulationB = createRenderTarget(width, height);
+  const simulationWidth = 200;
+  const simulationHeight = 200;
+  const worldTexture = createWorldTexture(simulationWidth, simulationHeight);
+  const simulations: Simulation[] = [];
+  const columns = Math.ceil(window.innerWidth / simulationWidth);
+  const rows = Math.ceil(window.innerHeight / simulationHeight);
+  const numSimulations = rows * columns;
 
-  const worldTexture = createWorldTexture(width, height);
-  const worldTextureScale = new THREE.Vector2(width, height);
-
-  const simulationMaterial = new THREE.ShaderMaterial({
-    vertexShader,
-    fragmentShader,
-    uniforms: {
-      uState: { value: worldTexture },
-      uScale: { value: worldTextureScale },
-      uBorn: { value: BORN },
-      uSurvive: { value: SURVIVE },
-    },
-  });
-
-  const simulationGeometry = createPlaneGeometry(width, height);
-
-  const simulationPlane = new THREE.Mesh(
-    simulationGeometry,
-    simulationMaterial
-  );
-  simulationScene.add(simulationPlane);
+  for (let i = 0; i < numSimulations; i++) {
+    simulations.push(
+      createSimulation({
+        width: simulationWidth,
+        height: simulationHeight,
+        worldTexture,
+      })
+    );
+  }
 
   // Insert the simulation in the rendered scene as textures
-  const renderMaterial = new THREE.MeshBasicMaterial({
-    map: simulationA.texture,
+  simulations.forEach((simulation, index) => {
+    const renderGeometry = createPlaneGeometry(
+      simulationWidth,
+      simulationHeight
+    );
+    const renderMaterial = new THREE.MeshBasicMaterial({
+      map: simulation.renderTargetA.texture,
+    });
+
+    const renderPlane = new THREE.Mesh(renderGeometry, renderMaterial);
+    renderPlane.translateX(
+      (index % columns) * simulationWidth - window.innerWidth / 2
+    );
+    renderPlane.translateY(
+      Math.floor(index / columns) * simulationHeight - window.innerHeight / 2
+    );
+    renderScene.add(renderPlane);
   });
-  const renderPlane = new THREE.Mesh(renderGeometry, renderMaterial);
-  renderScene.add(renderPlane);
 
   function animate() {
     // Update game of life by (ab)using WebGL
-    renderer.setRenderTarget(simulationA);
-    renderer.render(simulationScene, simulationCamera);
+    simulations.forEach((simulation) => {
+      renderer.setRenderTarget(simulation.renderTargetA);
+      renderer.render(simulation.scene, simulation.camera);
+    });
 
     // Render the game of life on screen
     renderer.setRenderTarget(null);
     renderer.render(renderScene, renderCamera);
 
     // Ping pong frame buffers
-    [simulationA, simulationB] = [simulationB, simulationA];
-    simulationMaterial.uniforms.uState.value = simulationB.texture;
+    simulations.forEach((simulation) => {
+      [simulation.renderTargetA, simulation.renderTargetB] = [
+        simulation.renderTargetB,
+        simulation.renderTargetA,
+      ];
+      simulation.material.uniforms.uState.value =
+        simulation.renderTargetB.texture;
+    });
 
-    requestAnimationFrame(animate);
+    setTimeout(() => requestAnimationFrame(animate), 0);
   }
 
   animate();
