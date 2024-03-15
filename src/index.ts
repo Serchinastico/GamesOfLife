@@ -2,8 +2,9 @@ import * as THREE from "three";
 import vertexShader from "./shaders/vertex.glsl";
 import gameOfLifeShader from "./shaders/classicGameOfLife.fs";
 
-const BORN = 0b00001000;
-const SURVIVE = 0b00001100;
+const EXPLORE_MODE = false;
+const BORN_OVERRIDE: number | null = 26;
+const SURVIVE_OVERRIDE: number | null = 69;
 
 interface Simulation {
   renderTargetA: THREE.WebGLRenderTarget<THREE.Texture>;
@@ -34,8 +35,16 @@ function createSimulation({
   const steps = [Math.random(), Math.random(), Math.random(), Math.random()];
   steps.sort();
 
+  /**
+   * We use born as a mask for survive because if a bit is already set for born
+   * then we won't count it for survive (as the born predicate comes before the
+   * survival one).
+   *
+   * The operation ~A & B is a reverse mask. It basically sets to 0 every bit
+   * where A is 1 and sets it to whatever there is in B when A is 0
+   */
   const born = Math.round(Math.random() * 256);
-  const survive = Math.round(Math.random() * 256);
+  const survive = ~born & Math.round(Math.random() * 256);
 
   const material = new THREE.ShaderMaterial({
     vertexShader,
@@ -47,10 +56,8 @@ function createSimulation({
         value: new THREE.Vector4(steps[0], steps[1], steps[2], steps[3]),
       },
       uSeed: { value: Math.random() },
-      uBorn: { value: BORN },
-      uSurvive: { value: SURVIVE },
-      uBornRnd: { value: born },
-      uSurviveRnd: { value: survive },
+      uBornRnd: { value: BORN_OVERRIDE ?? born },
+      uSurviveRnd: { value: SURVIVE_OVERRIDE ?? survive },
     },
   });
 
@@ -117,32 +124,47 @@ function createRenderTarget(width: number, height: number) {
   });
 }
 
-function main() {
-  const width = window.innerWidth,
-    height = window.innerHeight;
+function logSimulationsTable({
+  simulations,
+  columns,
+}: {
+  simulations: Simulation[];
+  columns: number;
+}) {
+  const table: string[][] = [];
 
-  const renderer = new THREE.WebGLRenderer();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+  simulations.forEach((simulation, index) => {
+    const row = Math.floor(index / columns);
 
-  /**
-   * The rendering components consisting of a scene with a single plane
-   * with a texture that is the representation of the computed game of life
-   */
-  const renderScene = new THREE.Scene();
-  const renderCamera = createCamera(width, height);
+    if (table[row] === undefined) {
+      table.push([]);
+    }
 
-  /**
-   * The simulation consists of a different scene where we include our
-   * simulation fragments that will take care of "rendering" (or computing)
-   * the result of a step in the game of life and printing it in a texture
-   */
-  const simulationWidth = 200;
-  const simulationHeight = 200;
+    table[row].push(
+      `b${simulation.material.uniforms.uBornRnd.value}/s${simulation.material.uniforms.uSurviveRnd.value}`.padEnd(
+        10,
+        " "
+      )
+    );
+  });
+
+  table.reverse();
+
+  table.forEach((row) => {
+    console.log(`| ${row.join(" | ")} |`);
+  });
+}
+
+function createSimulations(renderScene: THREE.Scene) {
+  const simulationWidth = EXPLORE_MODE ? 200 : window.innerWidth;
+  const simulationHeight = EXPLORE_MODE ? 200 : window.innerHeight;
   const worldTexture = createWorldTexture(simulationWidth, simulationHeight);
+
   const simulations: Simulation[] = [];
-  const columns = Math.floor(window.innerWidth / simulationWidth) + 2;
-  const rows = Math.floor(window.innerHeight / simulationHeight) + 2;
+  const columns =
+    Math.floor(window.innerWidth / simulationWidth) + (EXPLORE_MODE ? 2 : 0);
+  const rows =
+    Math.floor(window.innerHeight / simulationHeight) + (EXPLORE_MODE ? 2 : 0);
   const numSimulations = rows * columns;
 
   for (let i = 0; i < numSimulations; i++) {
@@ -166,22 +188,48 @@ function main() {
     });
 
     const renderPlane = new THREE.Mesh(renderGeometry, renderMaterial);
-    renderPlane.translateX(
-      (index % columns) * simulationWidth - window.innerWidth / 2
-    );
-    renderPlane.translateY(
-      Math.floor(index / columns) * simulationHeight - window.innerHeight / 2
-    );
-    renderScene.add(renderPlane);
 
-    console.log(
-      `Simulation ${index} (x: ${index % columns}, y: ${Math.floor(
-        index / columns
-      )}) - Born: ${simulation.material.uniforms.uBornRnd.value} - Survive: ${
-        simulation.material.uniforms.uSurviveRnd.value
-      }`
-    );
+    /**
+     * In explore mode we need to move all regions to their place
+     */
+    if (EXPLORE_MODE) {
+      renderPlane.translateX(
+        (index % columns) * simulationWidth - window.innerWidth / 2
+      );
+      renderPlane.translateY(
+        Math.floor(index / columns) * simulationHeight - window.innerHeight / 2
+      );
+    }
+
+    renderScene.add(renderPlane);
   });
+
+  logSimulationsTable({ simulations, columns });
+
+  return simulations;
+}
+
+function main() {
+  const width = window.innerWidth,
+    height = window.innerHeight;
+
+  const renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  /**
+   * The rendering components consisting of a scene with a single plane
+   * with a texture that is the representation of the computed game of life
+   */
+  const renderScene = new THREE.Scene();
+  const renderCamera = createCamera(width, height);
+
+  /**
+   * The simulation consists of a different scene where we include our
+   * simulation fragments that will take care of "rendering" (or computing)
+   * the result of a step in the game of life and printing it in a texture
+   */
+  const simulations = createSimulations(renderScene);
 
   function animate() {
     // Update game of life by (ab)using WebGL
@@ -200,6 +248,7 @@ function main() {
         simulation.renderTargetB,
         simulation.renderTargetA,
       ];
+
       simulation.material.uniforms.uState.value =
         simulation.renderTargetB.texture;
     });

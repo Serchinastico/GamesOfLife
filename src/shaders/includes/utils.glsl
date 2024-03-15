@@ -1,9 +1,19 @@
-vec3 getColorAt(int dx, int dy) {
-    return texture2D(uState, (gl_FragCoord.xy + vec2(dx, dy)) / uScale).rgb;
+vec4 getColorAt(int dx, int dy) {
+    return texture2D(uState, (gl_FragCoord.xy + vec2(dx, dy)) / uScale).rgba;
 }
 
-int isAlive(int dx, int dy) {
-    return int(texture2D(uState, (gl_FragCoord.xy + vec2(dx, dy)) / uScale).r);
+int getIntColorAt(int dx, int dy) {
+    vec4 color = getColorAt(dx, dy);
+
+    return int(clamp(color.r + color.g + color.b, 0.0, 1.0));
+}
+
+bool isAlive(int dx, int dy) {
+    return getIntColorAt(dx, dy) > 0;
+}
+
+bool isDead(int dx, int dy) {
+    return getIntColorAt(dx, dy) == 0;
 }
 
 /**

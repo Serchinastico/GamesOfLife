@@ -24,13 +24,15 @@ I decided to make the calculations more efficient and decided to use WebGL for t
 
 Some interesting configurations I liked:
 
-- b5/s215 - Two groups, horizontals and verticals, fighting for territory
-- b26/s93 - Similar to the above but it has more active battles
+- b5/s210 - Two groups, horizontals and verticals, fighting for territory
+- b26/s69 - Similar to the above but it has more active battles
 - b209/s51 - Borders are kind of a black mass that surround the cells
 - b209/s240 - Interesting black borders but thicker
 - b113/s85 - It dies slowly but forms patterns in the process that are quite a thing
 - b254/s109 - It's static but the patterns it creates inside are very square-ish and beautiful
 - b224/s181 - Again an static pattern but this time it looks in equilibrium between the dark and clear patterns
+
+I now realised that some of these might have more bits than necessary. Because we first test for born status and then for survive status, born bits have priority over survival ones, hence, some survival bits can be removed.
 
 ## Ideas
 
@@ -40,3 +42,8 @@ Some interesting configurations I liked:
 - WebGL to make automata more efficient
 - Use HashLife to make automata more efficient
 - Leave traces
+
+## Worklog
+
+- I have a working WebGL implementation where I can change the born/survival rules so I want to give it some depth
+- I'm going to start by coloring columns/rows (depending on neighbors)
