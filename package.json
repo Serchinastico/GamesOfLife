@@ -11,6 +11,7 @@
   "main": "index.js",
   "scripts": {
     "bundle": "webpack-cli",
+    "deploy": "gh-pages -d dist",
     "start:dev": "webpack-dev-server"
   },
   "repository": {
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@types/three": "^0.162.0",
+    "gh-pages": "^6.1.1",
     "html-webpack-plugin": "^5.6.0",
     "ts-loader": "^9.5.1",
     "ts-shader-loader": "^2.0.2",
