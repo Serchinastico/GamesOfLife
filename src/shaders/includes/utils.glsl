@@ -2,6 +2,13 @@ vec4 getColorAt(int dx, int dy) {
     return texture2D(uState, (gl_FragCoord.xy + vec2(dx, dy)) / uScale).rgba;
 }
 
+vec4 getWeightedColorAt(int dx, int dy) {
+    vec4 color = getColorAt(dx, dy);
+    vec4 weight = texture2D(uWeights, vec2(dx + 2, dy + 2)).rgba;
+
+    return color * weight;
+}
+
 int getIntColorAt(int dx, int dy) {
     vec4 color = getColorAt(dx, dy);
 

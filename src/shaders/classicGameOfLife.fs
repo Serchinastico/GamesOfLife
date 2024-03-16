@@ -6,14 +6,14 @@ uniform int uSurviveRnd;
 #include "./includes/utils.glsl";
 
 void main() {
-    int sum = isAlive(-1, -1) +
-        isAlive(-1, 0) +
-        isAlive(-1, 1) +
-        isAlive(0, -1) +
-        isAlive(0, 1) +
-        isAlive(1, -1) +
-        isAlive(1, 0) +
-        isAlive(1, 1);
+    int sum = getIntColorAt(-1, -1) +
+        getIntColorAt(-1, 0) +
+        getIntColorAt(-1, 1) +
+        getIntColorAt(0, -1) +
+        getIntColorAt(0, 1) +
+        getIntColorAt(1, -1) +
+        getIntColorAt(1, 0) +
+        getIntColorAt(1, 1);
 
     /**
      * We transform the sum of surviving neighbors into a single bit inside an int.
@@ -32,7 +32,7 @@ void main() {
     if((sumbit & uBornRnd) > 0) {
         gl_FragColor = vec4(vec3(1.0), 1.0);
     } else if((sumbit & uSurviveRnd) > 0) {
-        int current = isAlive(0, 0);
+        int current = getIntColorAt(0, 0);
         gl_FragColor = vec4(vec3(current), 1.0);
     } else {
         gl_FragColor = vec4(vec3(0.0), 1.0);

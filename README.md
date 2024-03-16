@@ -47,3 +47,5 @@ I now realised that some of these might have more bits than necessary. Because w
 
 - I have a working WebGL implementation where I can change the born/survival rules so I want to give it some depth
 - I'm going to start by coloring columns/rows (depending on neighbors)
+- I want to try something different: weighting positions so that I can maybe push red from top-left corner and green from bottom-right corner
+- Some interesting patterns when I set all weights to red weight: b61/s64
